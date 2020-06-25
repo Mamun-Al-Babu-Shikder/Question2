@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 /**
@@ -27,7 +29,7 @@ public class LoginController {
     }
 
     @PostMapping("/login-process")
-    public String loginProcess(@Valid AppUser appUser, Errors errors, Model model){
+    public String loginProcess(@Valid AppUser appUser, Errors errors, HttpServletRequest request, Model model){
         if(errors.hasErrors()){
             return "login";
         }
@@ -35,12 +37,17 @@ public class LoginController {
         if(user==null || !appUser.getPassword().equals(user.getPassword())){
             return "redirect:/failed";
         }else{
+            request.getSession().setAttribute("APP_USER", user.getEmail());
             return "redirect:/success";
         }
     }
 
     @GetMapping("/success")
-    public String loginSuccess(Model model){
+    public String loginSuccess(HttpServletRequest request, Model model){
+        String email = (String) request.getSession().getAttribute("APP_USER");
+        if(email==null){
+            return "redirect:/login";
+        }
         model.addAttribute("message","You have successfully logged to this demo project.");
         return "success";
     }
@@ -50,6 +57,4 @@ public class LoginController {
         model.addAttribute("message","Login Failed! Please check your email address and password.");
         return "error";
     }
-
-
 }
